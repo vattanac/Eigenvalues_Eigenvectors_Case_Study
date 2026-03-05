@@ -18,7 +18,7 @@
 
 **Open the interactive guide in your browser:**
 
-> 📄 [`eigenvalues_interactive.html`](./eigenvalues_interactive.html)
+> 📄 [`Demo`](https://eigenvalues-eigenvectors-case-study.netlify.app/)
 
 ### What's inside the HTML guide:
 
