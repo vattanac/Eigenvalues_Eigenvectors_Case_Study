@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eigenvalues & Eigenvectors — Interactive Guide</title>
+<style>
+  :root {
+    --blue-dark: #1F4E79;
+    --blue-mid: #2E75B6;
+    --blue-light: #D6E4F7;
+    --green-dark: #375623;
+    --green-light: #E2EFDA;
+    --amber: #FFC000;
+    --amber-light: #FFF9E6;
+    --red: #C0392B;
+    --gray: #555;
+    --bg: #F4F8FD;
+    --white: #fff;
+    --shadow: 0 4px 18px rgba(31,78,121,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: #222;
+    line-height: 1.7;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--blue-dark);
+    padding: 0 2rem;
+    display: flex; align-items: center; gap: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    flex-wrap: wrap;
+  }
+  nav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; padding: 0.85rem 0; white-space: nowrap; }
+  nav a {
+    color: #c8d9ef; text-decoration: none; font-size: 0.82rem;
+    padding: 0.85rem 0.5rem; border-bottom: 3px solid transparent;
+    transition: all .2s; white-space: nowrap;
+  }
+  nav a:hover, nav a.active { color: #fff; border-bottom-color: var(--amber); }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 60%, #5BA4CF 100%);
+    color: white; text-align: center; padding: 4rem 2rem 3rem;
+  }
+  .hero h1 { font-size: 3rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 0.5rem; }
+  .hero p { font-size: 1.15rem; opacity: .85; max-width: 600px; margin: 0 auto 1.5rem; }
+  .hero .badge {
+    display: inline-block; background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.35); border-radius: 20px;
+    padding: 0.3rem 1rem; font-size: 0.85rem;
+  }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem; }
+  section { margin-bottom: 3rem; scroll-margin-top: 70px; }
+
+  /* ── SECTION HEADING ── */
+  .section-title {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 1.55rem; font-weight: 700; color: var(--blue-dark);
+    border-bottom: 3px solid var(--blue-mid); padding-bottom: 0.4rem; margin-bottom: 1.5rem;
+  }
+  .section-num {
+    background: var(--blue-dark); color: #fff;
+    border-radius: 50%; width: 2rem; height: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; font-weight: 700; flex-shrink: 0;
+  }
+  .subsection { font-size: 1.15rem; font-weight: 700; color: var(--blue-mid); margin: 1.5rem 0 0.5rem; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.2rem;
+  }
+
+  /* ── FORMULA BOX ── */
+  .formula {
+    background: var(--blue-light); border: 2px solid var(--blue-mid);
+    border-radius: 10px; padding: 1.1rem 1.5rem;
+    font-family: 'Courier New', monospace; font-size: 1rem;
+    color: var(--blue-dark); font-weight: 700;
+    text-align: center; margin: 1rem 0; line-height: 2;
+  }
+  .formula .highlight { color: #C0392B; font-size: 1.15em; }
+
+  /* ── NOTE BOX ── */
+  .note {
+    background: var(--amber-light); border-left: 5px solid var(--amber);
+    border-radius: 6px; padding: 0.9rem 1.2rem; margin: 1rem 0;
+    font-size: 0.95rem; color: #7B5900;
+  }
+  .note strong { color: #5a3f00; }
+
+  /* ── SUCCESS BOX ── */
+  .success {
+    background: var(--green-light); border-left: 5px solid #70AD47;
+    border-radius: 6px; padding: 0.9rem 1.2rem; margin: 1rem 0;
+    font-size: 0.95rem; color: var(--green-dark);
+  }
+
+  /* ── STEP BOXES ── */
+  .steps { display: flex; flex-direction: column; gap: 0.8rem; margin: 1rem 0; }
+  .step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    background: #F2F9EE; border: 1.5px solid #70AD47; border-radius: 10px; padding: 1rem 1.2rem;
+  }
+  .step-num {
+    background: #70AD47; color: white; border-radius: 50%;
+    width: 2rem; height: 2rem; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.95rem;
+  }
+  .step-body { flex: 1; }
+  .step-body strong { color: var(--green-dark); display: block; margin-bottom: 0.3rem; }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.93rem; }
+  th { background: var(--blue-dark); color: #fff; padding: 0.65rem 1rem; text-align: left; }
+  th:first-child { border-radius: 8px 0 0 0; }
+  th:last-child { border-radius: 0 8px 0 0; }
+  td { padding: 0.6rem 1rem; border-bottom: 1px solid #e0ecf8; }
+  tr:nth-child(even) td { background: var(--blue-light); }
+  tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+  tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+
+  /* ── CANVAS SECTION ── */
+  .vis-wrap {
+    background: var(--white); border-radius: 12px; box-shadow: var(--shadow);
+    padding: 1.5rem; margin: 1rem 0;
+  }
+  .vis-wrap h3 { font-size: 1rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 0.75rem; }
+  canvas { display: block; width: 100%; border-radius: 8px; background: #0D1B2A; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; align-items: center;
+  }
+  .controls label { font-size: 0.9rem; color: var(--gray); }
+  .controls input[type=range] { width: 120px; accent-color: var(--blue-mid); }
+  .controls button {
+    background: var(--blue-mid); color: #fff; border: none;
+    border-radius: 6px; padding: 0.4rem 1rem; cursor: pointer;
+    font-size: 0.88rem; font-weight: 600; transition: background .2s;
+  }
+  .controls button:hover { background: var(--blue-dark); }
+  .controls button.active { background: var(--green-dark); }
+  .val-display { font-family: monospace; color: var(--blue-dark); font-weight: 700; font-size: 0.95rem; }
+
+  /* ── MATRIX INPUT ── */
+  .matrix-input {
+    display: inline-grid; grid-template-columns: repeat(2, 72px);
+    gap: 6px; background: #E8F2FD; border: 2px solid var(--blue-mid);
+    padding: 10px; border-radius: 8px;
+  }
+  .matrix-input input {
+    width: 66px; height: 42px; text-align: center;
+    border: 1.5px solid #aac4e4; border-radius: 5px;
+    font-size: 1rem; font-family: 'Courier New', monospace; font-weight: 700;
+    color: var(--blue-dark); background: white;
+  }
+  .matrix-input input:focus { outline: 2px solid var(--blue-mid); }
+
+  .result-box {
+    background: #F0F6FF; border: 1.5px solid var(--blue-mid);
+    border-radius: 8px; padding: 1rem 1.3rem; margin-top: 1rem;
+    font-family: 'Courier New', monospace; font-size: 0.95rem; line-height: 2;
+    color: var(--blue-dark);
+  }
+  .result-box .lam { color: #C0392B; font-weight: 700; }
+  .result-box .vec { color: var(--green-dark); font-weight: 700; }
+
+  .flex-row { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+  .flex-row > * { flex: 1; min-width: 220px; }
+
+  /* ── ACCORDION (worked examples) ── */
+  .accordion { border: 1.5px solid #c8dcf0; border-radius: 10px; overflow: hidden; margin: 0.8rem 0; }
+  .accordion-header {
+    background: var(--blue-light); padding: 0.85rem 1.2rem;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    font-weight: 700; color: var(--blue-dark); font-size: 0.98rem;
+    user-select: none; transition: background .2s;
+  }
+  .accordion-header:hover { background: #bdd4ef; }
+  .accordion-header .arrow { transition: transform .3s; font-size: 0.8rem; }
+  .accordion-body { display: none; padding: 1.2rem; background: #fff; }
+  .accordion.open .accordion-body { display: block; }
+  .accordion.open .arrow { transform: rotate(180deg); }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--blue-mid); margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .tab {
+    padding: 0.6rem 1.2rem; cursor: pointer; font-weight: 600; font-size: 0.9rem;
+    color: var(--gray); border-bottom: 3px solid transparent; margin-bottom: -2px;
+    transition: all .2s; border-radius: 8px 8px 0 0;
+  }
+  .tab:hover { color: var(--blue-mid); background: var(--blue-light); }
+  .tab.active { color: var(--blue-dark); border-bottom-color: var(--blue-dark); background: var(--white); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── QUIZ ── */
+  .quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--blue-dark); }
+  .quiz-options { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.8rem; }
+  .quiz-opt {
+    border: 2px solid #c8dcf0; border-radius: 8px; padding: 0.5rem 1rem;
+    cursor: pointer; font-size: 0.9rem; background: #fff; transition: all .2s;
+    font-family: 'Courier New', monospace;
+  }
+  .quiz-opt:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+  .quiz-opt.correct { border-color: #70AD47; background: #E2EFDA; color: var(--green-dark); }
+  .quiz-opt.wrong { border-color: var(--red); background: #fde8e6; color: var(--red); }
+  .quiz-feedback { font-size: 0.92rem; margin-top: 0.5rem; min-height: 1.5rem; font-weight: 600; }
+
+  /* ── PROPERTY PILLS ── */
+  .pills { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1rem 0; }
+  .pill {
+    background: var(--blue-light); border: 1.5px solid var(--blue-mid);
+    border-radius: 20px; padding: 0.35rem 1rem; font-size: 0.87rem;
+    color: var(--blue-dark); font-weight: 600;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin: 1rem 0; }
+  .progress-label { font-size: 0.85rem; color: var(--gray); margin-bottom: 4px; }
+  .progress-bar {
+    height: 8px; background: #ddeaf8; border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--blue-mid); border-radius: 4px; transition: width .5s; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 2rem; }
+    nav a { font-size: 0.75rem; padding: 0.7rem 0.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="brand">Eigen Guide</span>
+  <a href="#intro">Intro</a>
+  <a href="#howto">How-To</a>
+  <a href="#visualizer">Visualizer</a>
+  <a href="#calculator">Calculator</a>
+  <a href="#examples">Examples</a>
+  <a href="#properties">Properties</a>
+  <a href="#warnings">Warnings</a>
+  <a href="#quiz">Quiz</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Eigenvalues &amp; Eigenvectors</h1>
+  <p>An interactive, step-by-step guide with live visualizations, a built-in calculator, and a self-check quiz.</p>
+  <span class="badge">Based on MIT 18.06 Linear Algebra</span>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════════════════════
+     1. INTRODUCTION
+     ══════════════════════════════════════════════════════════ -->
+<section id="intro">
+  <div class="section-title"><span class="section-num">1</span>What Are Eigenvalues &amp; Eigenvectors?</div>
+
+  <div class="card">
+    <p>A matrix <strong>A</strong> acts on vectors — it multiplies them and usually <em>changes their direction</em>. But certain special vectors come out pointing in the <strong>same (or opposite) direction</strong> as they went in. These are <strong>eigenvectors</strong>.</p>
+  </div>
+
+  <div class="formula">
+    <span class="highlight">A · x = λ · x</span>
+  </div>
+
+  <div class="flex-row">
+    <div class="card">
+      <div class="subsection">🔵 Eigenvector (x)</div>
+      <p>A non-zero vector that does <em>not change direction</em> when multiplied by A. It may be stretched, shrunk, or flipped — but it stays on the same line.</p>
+    </div>
+    <div class="card">
+      <div class="subsection">🔴 Eigenvalue (λ)</div>
+      <p>The scalar multiplier. It tells you <em>how much</em> the eigenvector is stretched (λ &gt; 1), shrunk (0 &lt; λ &lt; 1), flipped (λ &lt; 0), or zeroed out (λ = 0).</p>
+    </div>
+  </div>
+
+  <div class="note"><strong>Note:</strong> λ can be positive, negative, zero, or even complex. x must be a non-zero vector.</div>
+
+  <div class="card">
+    <div class="subsection">Special Case: λ = 0</div>
+    <p>If λ = 0, then <code>A·x = 0</code>. This means x is in the <strong>null space of A</strong>, and A is a <strong>singular matrix</strong> (no inverse).</p>
+    <div class="formula">A is singular ↔ λ = 0 is an eigenvalue</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     2. HOW TO FIND
+     ══════════════════════════════════════════════════════════ -->
+<section id="howto">
+  <div class="section-title"><span class="section-num">2</span>How to Find Eigenvalues &amp; Eigenvectors</div>
+
+  <div class="card">
+    <p>Start from <code>A·x = λ·x</code> and rearrange:</p>
+    <div class="formula">A·x − λ·x = 0 → (A − λI)·x = 0</div>
+    <p>For a <strong>non-zero</strong> x to exist, the matrix <code>(A − λI)</code> must be <strong>singular</strong>. A matrix is singular when its determinant is zero:</p>
+    <div class="formula"><span class="highlight">det(A − λI) = 0</span><br><small style="font-weight:400;font-size:0.82rem">← Characteristic Equation</small></div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Form (A − λI)</strong>
+        Subtract λ from every entry on the <em>main diagonal</em> of A. Leave all other entries unchanged.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Set det(A − λI) = 0</strong>
+        Compute the determinant and set it equal to zero. This gives the <em>characteristic polynomial</em> in λ.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Solve for λ (the Eigenvalues)</strong>
+        Find the roots of the characteristic polynomial. An n×n matrix has exactly n eigenvalues (counting repeats).
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>Find Eigenvectors for each λ</strong>
+        For each eigenvalue λᵢ, solve <code>(A − λᵢI)·x = 0</code>. Use elimination to find the null space. The result is the eigenvector(s).
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><strong>2×2 Shortcut:</strong> The characteristic equation is always <code>λ² − (trace)·λ + (det) = 0</code>. Use this to skip the determinant expansion!</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     3. VISUALIZER
+     ══════════════════════════════════════════════════════════ -->
+<section id="visualizer">
+  <div class="section-title"><span class="section-num">3</span>Vector Transformation Visualizer</div>
+
+  <div class="vis-wrap">
+    <h3>Watch how matrix A transforms vectors. Eigenvectors (🔵 blue) stay on the same line — they only get scaled by λ. Other vectors (🔴 red) change direction.</h3>
+    <canvas id="visCanvas" width="800" height="420"></canvas>
+    <div class="controls">
+      <span>Matrix A:</span>
+      <div class="matrix-input" style="display:inline-grid">
+        <input type="number" id="va" value="3" step="0.5">
+        <input type="number" id="vb" value="1" step="0.5">
+        <input type="number" id="vc" value="1" step="0.5">
+        <input type="number" id="vd" value="3" step="0.5">
+      </div>
+      <button onclick="runAnim()" id="animBtn">▶ Animate Transform</button>
+      <button onclick="resetAnim()">↺ Reset</button>
+      <span class="val-display" id="eigenDisplay"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     4. CALCULATOR
+     ══════════════════════════════════════════════════════════ -->
+<section id="calculator">
+  <div class="section-title"><span class="section-num">4</span>Interactive 2×2 Eigenvalue Calculator</div>
+
+  <div class="card">
+    <div class="flex-row" style="align-items:center">
+      <div>
+        <p style="margin-bottom:0.75rem;font-weight:600">Enter your 2×2 matrix A:</p>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:2rem;color:#aaa">|</span>
+          <div class="matrix-input">
+            <input type="number" id="ma" value="3" step="0.5">
+            <input type="number" id="mb" value="1" step="0.5">
+            <input type="number" id="mc" value="1" step="0.5">
+            <input type="number" id="md" value="3" step="0.5">
+          </div>
+          <span style="font-size:2rem;color:#aaa">|</span>
+        </div>
+        <div style="margin-top:0.75rem">
+          <button onclick="calcEigen()" style="background:var(--blue-dark);color:#fff;border:none;border-radius:7px;padding:0.55rem 1.4rem;cursor:pointer;font-size:0.95rem;font-weight:700">Calculate Eigenvalues</button>
+        </div>
+      </div>
+      <div id="calcResult" class="result-box" style="min-height:120px">
+        Results will appear here…
+      </div>
+    </div>
+
+    <div id="calcSteps" style="margin-top:1rem;display:none">
+      <div class="subsection">Step-by-Step Working</div>
+      <div id="stepsContent"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     5. WORKED EXAMPLES
+     ══════════════════════════════════════════════════════════ -->
+<section id="examples">
+  <div class="section-title"><span class="section-num">5</span>Worked Examples</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab(this,'t1')">Symmetric Matrix</div>
+    <div class="tab" onclick="showTab(this,'t2')">Permutation</div>
+    <div class="tab" onclick="showTab(this,'t3')">Projection</div>
+    <div class="tab" onclick="showTab(this,'t4')">Rotation (Complex)</div>
+    <div class="tab" onclick="showTab(this,'t5')">Triangular (Repeated)</div>
+  </div>
+
+  <!-- TAB 1 -->
+  <div class="tab-panel active" id="t1">
+    <div class="card">
+      <p><strong>Matrix:</strong> A = [[3,1],[1,3]] &nbsp;(Symmetric matrix)</p>
+      <div class="formula">A = | 3  1 |<br>    | 1  3 |</div>
+      <div class="accordion open">
+        <div class="accordion-header" onclick="toggleAcc(this)">Step 1 &amp; 2: Characteristic Equation <span class="arrow">▼</span></div>
+        <div class="accordion-body">
+          <div class="formula">det(A − λI) = (3−λ)(3−λ) − 1·1<br>= λ² − 6λ + 8 = 0</div>
+          <div class="note"><strong>Shortcut check:</strong> trace = 3+3 = 6 ✓ &nbsp;|&nbsp; det = 9−1 = 8 ✓</div>
+        </div>
+      </div>
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAcc(this)">Step 3: Eigenvalues <span class="arrow">▼</span></div>
+        <div class="accordion-body">
+          <div class="formula">(λ−4)(λ−2) = 0<br>λ₁ = 4,&nbsp; λ₂ = 2</div>
+        </div>
+      </div>
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAcc(this)">Step 4: Eigenvectors <span class="arrow">▼</span></div>
+        <div class="accordion-body">
+          <p><strong>For λ₁ = 4:</strong></p>
+          <div class="formula">A − 4I = | −1  1 | → x₁ = | 1 |<br>         |  1 −1 |           | 1 |</div>
+          <p><strong>For λ₂ = 2:</strong></p>
+          <div class="formula">A − 2I = | 1  1 | → x₂ = | −1 |<br>         | 1  1 |           |  1 |</div>
+          <div class="success">✓ Both eigenvectors are perpendicular: (1)(−1) + (1)(1) = 0. This always happens for symmetric matrices!</div>
+        </div>
+      </div>
+      <table>
+        <tr><th>Eigenvalue</th><th>Eigenvector</th><th>Meaning</th></tr>
+        <tr><td>λ₁ = 4</td><td>x₁ = [1, 1]ᵀ</td><td>Stretched by factor 4</td></tr>
+        <tr><td>λ₂ = 2</td><td>x₂ = [−1, 1]ᵀ</td><td>Stretched by factor 2</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div class="tab-panel" id="t2">
+    <div class="card">
+      <p><strong>Matrix:</strong> A = [[0,1],[1,0]] &nbsp;(Swaps the two components of any vector)</p>
+      <div class="formula">A = | 0  1 |<br>    | 1  0 |</div>
+      <p>trace = 0, det = −1</p>
+      <div class="formula">λ² − 0·λ + (−1) = 0 → λ² − 1 = 0<br>λ₁ = 1,&nbsp; λ₂ = −1</div>
+      <table>
+        <tr><th>Eigenvalue</th><th>Eigenvector</th><th>Intuition</th></tr>
+        <tr><td>λ₁ = 1</td><td>x₁ = [1, 1]ᵀ</td><td>Swapping two equal entries → same vector</td></tr>
+        <tr><td>λ₂ = −1</td><td>x₂ = [−1, 1]ᵀ</td><td>Swapping opposite entries → flips sign</td></tr>
+      </table>
+      <div class="note"><strong>Verify:</strong> sum of λ = 1 + (−1) = 0 = trace ✓ &nbsp;|&nbsp; product = 1×(−1) = −1 = det ✓</div>
+    </div>
+  </div>
+
+  <!-- TAB 3 -->
+  <div class="tab-panel" id="t3">
+    <div class="card">
+      <p><strong>Projection Matrix P</strong> onto a plane (3D) — no computation needed, just geometry!</p>
+      <div class="flex-row">
+        <div>
+          <p><strong>Case 1 — Vector in the plane:</strong></p>
+          <div class="formula">P·x = x → λ = 1</div>
+          <p>Projection of a vector already in the plane = itself. Unchanged.</p>
+        </div>
+        <div>
+          <p><strong>Case 2 — Vector ⊥ to the plane:</strong></p>
+          <div class="formula">P·x = 0 → λ = 0</div>
+          <p>Projection of a perpendicular vector = zero. Collapses to origin.</p>
+        </div>
+      </div>
+      <table>
+        <tr><th>Eigenvalue</th><th>Which eigenvectors?</th></tr>
+        <tr><td>λ = 1</td><td>All vectors lying inside the projection plane</td></tr>
+        <tr><td>λ = 0</td><td>All vectors perpendicular to the plane (null space of P)</td></tr>
+      </table>
+      <div class="note"><strong>Key insight:</strong> We can read eigenvalues purely from the geometry — no determinant calculation needed for special matrices!</div>
+    </div>
+  </div>
+
+  <!-- TAB 4 -->
+  <div class="tab-panel" id="t4">
+    <div class="card">
+      <p><strong>Rotation Matrix Q</strong> — rotates every vector by 90°. No real vector stays on the same line after 90° rotation!</p>
+      <div class="formula">Q = | 0  −1 |<br>    | 1   0 |</div>
+      <p>trace = 0, det = +1</p>
+      <div class="formula">λ² + 1 = 0<br>λ₁ = <span class="highlight">i</span>,&nbsp; λ₂ = <span class="highlight">−i</span></div>
+      <div class="note"><strong>Complex eigenvalues!</strong> A perfectly real matrix can have complex (imaginary) eigenvalues. This happens when the geometry has no real fixed direction (like rotation).</div>
+      <table>
+        <tr><th>Matrix Type</th><th>Eigenvalue Type</th></tr>
+        <tr><td>Symmetric (Aᵀ = A)</td><td>Always real</td></tr>
+        <tr><td>Anti-symmetric (Aᵀ = −A)</td><td>Pure imaginary</td></tr>
+        <tr><td>Rotation matrix</td><td>Complex (a ± bi)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 5 -->
+  <div class="tab-panel" id="t5">
+    <div class="card">
+      <p><strong>Upper Triangular Matrix</strong> — a case with a repeated eigenvalue.</p>
+      <div class="formula">A = | 3  1 |<br>    | 0  3 |</div>
+      <p><strong>Key fact:</strong> For triangular matrices, eigenvalues = diagonal entries!</p>
+      <div class="formula">det(A − λI) = (3−λ)² = 0<br>λ₁ = λ₂ = 3&nbsp; (repeated!)</div>
+      <p>Now find eigenvectors for λ = 3:</p>
+      <div class="formula">A − 3I = | 0  1 | → only solution: x = | 1 |<br>         | 0  0 |                              | 0 |</div>
+      <div class="note"><strong>Warning: Shortage of eigenvectors!</strong> This 2×2 matrix has only ONE independent eigenvector instead of two. This is called a <em>defective</em> or <em>degenerate</em> matrix. Repeated eigenvalues may (but don't always) cause this problem.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     6. PROPERTIES
+     ══════════════════════════════════════════════════════════ -->
+<section id="properties">
+  <div class="section-title"><span class="section-num">6</span>Key Properties</div>
+
+  <div class="card">
+    <div class="subsection">Trace = Sum of Eigenvalues</div>
+    <div class="formula">a₁₁ + a₂₂ + … + aₙₙ = λ₁ + λ₂ + … + λₙ</div>
+    <p>The sum of the diagonal entries of A always equals the sum of all eigenvalues.</p>
+  </div>
+
+  <div class="card">
+    <div class="subsection">Determinant = Product of Eigenvalues</div>
+    <div class="formula">det(A) = λ₁ · λ₂ · … · λₙ</div>
+    <p>This means if any eigenvalue is 0, the determinant is 0 → A is singular.</p>
+  </div>
+
+  <div class="card">
+    <div class="subsection">Adding c·I Shifts All Eigenvalues by c</div>
+    <div class="formula">If A·x = λ·x, then (A + cI)·x = (λ + c)·x</div>
+    <p>The eigenvectors stay exactly the same. Only the eigenvalues shift by c.</p>
+
+    <!-- Interactive shift demo -->
+    <div class="vis-wrap" style="margin-top:1rem">
+      <h3>Try it: Shift eigenvalues by adding c·I</h3>
+      <div style="margin:0.75rem 0">
+        <label>A = [[3,1],[1,3]] has λ₁=4, λ₂=2. Now add <strong>c·I</strong>:</label><br><br>
+        <label>c = <span class="val-display" id="cVal">0</span></label>
+        <input type="range" id="cShift" min="-5" max="5" step="0.5" value="0" oninput="updateShift(this.value)" style="width:200px;margin:0 1rem">
+      </div>
+      <div class="formula" id="shiftResult">λ₁ = 4 + 0 = 4 &nbsp;|&nbsp; λ₂ = 2 + 0 = 2</div>
+      <div class="success" id="shiftNote">Eigenvectors stay: [1,1]ᵀ and [−1,1]ᵀ — unchanged!</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="subsection">⚠ Eigenvalues Are NOT Linear</div>
+    <div class="formula">eigenvalues(A+B) ≠ eigenvalues(A) + eigenvalues(B)</div>
+    <p>This only works when B = c·I. In general, A and B have <em>different</em> eigenvectors, so you cannot simply add their eigenvalues. You must solve the eigenvalue problem from scratch for A+B.</p>
+  </div>
+
+  <div class="card">
+    <div class="subsection">Quick Reference</div>
+    <table>
+      <tr><th>Property</th><th>Formula / Fact</th></tr>
+      <tr><td>Eigenvalue equation</td><td>A·x = λ·x</td></tr>
+      <tr><td>Characteristic equation</td><td>det(A − λI) = 0</td></tr>
+      <tr><td>2×2 shortcut</td><td>λ² − (trace)λ + (det) = 0</td></tr>
+      <tr><td>Triangular matrix</td><td>Eigenvalues = diagonal entries</td></tr>
+      <tr><td>Symmetric matrix</td><td>Real λ, perpendicular eigenvectors</td></tr>
+      <tr><td>Singular matrix</td><td>λ = 0 is always an eigenvalue</td></tr>
+      <tr><td>Count</td><td>n×n matrix → exactly n eigenvalues</td></tr>
+      <tr><td>Identity shift</td><td>(A + cI) has same eigenvectors, λ shifts by c</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     7. WARNINGS
+     ══════════════════════════════════════════════════════════ -->
+<section id="warnings">
+  <div class="section-title"><span class="section-num">7</span>Common Pitfalls</div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
+    <div class="card" style="border-top:4px solid #C0392B">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">🌀 Complex Eigenvalues</div>
+      <p>Rotation and anti-symmetric matrices can have complex eigenvalues even though the matrix entries are real. Always check if the discriminant (trace² − 4·det) is negative.</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--amber)">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">🔁 Repeated Eigenvalues</div>
+      <p>A repeated eigenvalue doesn't automatically mean a shortage of eigenvectors — but it can. Triangular matrices with repeated diagonal entries are the classic example.</p>
+    </div>
+    <div class="card" style="border-top:4px solid #70AD47">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">➕ Non-Linearity</div>
+      <p>Eigenvalues don't add or multiply across matrix sums/products (unless one matrix is a multiple of I). Always re-solve for compound matrices.</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--blue-mid)">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">📐 Eigenvector ≠ Unique</div>
+      <p>Any scalar multiple of an eigenvector is also an eigenvector. When we "find the eigenvector," we're really finding a basis for the eigenspace (a whole line of vectors).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     8. QUIZ
+     ══════════════════════════════════════════════════════════ -->
+<section id="quiz">
+  <div class="section-title"><span class="section-num">8</span>Self-Check Quiz</div>
+  <div class="card">
+    <div id="quizContainer"></div>
+    <div style="margin-top:1rem">
+      <button onclick="checkQuiz()" style="background:var(--blue-dark);color:#fff;border:none;border-radius:7px;padding:0.55rem 1.4rem;cursor:pointer;font-size:0.95rem;font-weight:700">Submit Answers</button>
+      <button onclick="resetQuiz()" style="background:#eee;border:none;border-radius:7px;padding:0.55rem 1.1rem;cursor:pointer;font-size:0.95rem;margin-left:0.5rem">Reset</button>
+    </div>
+    <div id="quizScore" style="margin-top:1rem;font-weight:700;font-size:1.1rem;color:var(--blue-dark)"></div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<script>
+// ─── ACCORDION ────────────────────────────────────────────────────────────────
+function toggleAcc(header) {
+  const acc = header.closest('.accordion');
+  acc.classList.toggle('open');
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function showTab(el, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── EIGENVALUE CALCULATOR ────────────────────────────────────────────────────
+function round2(x) { return Math.round(x * 1000) / 1000; }
+
+function calcEigen2x2(a, b, c, d) {
+  const tr = a + d;
+  const det = a * d - b * c;
+  const disc = tr * tr - 4 * det;
+  let l1, l2, type, x1, x2, y1, y2;
+  if (disc > 1e-10) {
+    l1 = (tr + Math.sqrt(disc)) / 2;
+    l2 = (tr - Math.sqrt(disc)) / 2;
+    type = 'real';
+  } else if (disc > -1e-10) {
+    l1 = l2 = tr / 2;
+    type = 'repeated';
+  } else {
+    const re = tr / 2, im = Math.sqrt(-disc) / 2;
+    l1 = { re, im }; l2 = { re, im: -im };
+    type = 'complex';
+  }
+
+  const evs = [];
+  if (type !== 'complex') {
+    for (const lam of [l1, l2]) {
+      // (A - lam*I)x = 0, find null space
+      const aa = a - lam, bb = b, cc = c, dd = d - lam;
+      let xv, yv;
+      if (Math.abs(bb) > 1e-9) { xv = -bb; yv = aa; }
+      else if (Math.abs(cc) > 1e-9) { xv = dd; yv = -cc; }
+      else { xv = 1; yv = 0; }
+      const norm = Math.sqrt(xv * xv + yv * yv);
+      evs.push([round2(xv / norm), round2(yv / norm)]);
+    }
+  }
+  return { l1, l2, type, tr, det, disc, evs };
+}
+
+function calcEigen() {
+  const a = +document.getElementById('ma').value;
+  const b = +document.getElementById('mb').value;
+  const c = +document.getElementById('mc').value;
+  const d = +document.getElementById('md').value;
+  const r = calcEigen2x2(a, b, c, d);
+
+  let html = '';
+  if (r.type === 'real') {
+    html = `<span class="lam">λ₁ = ${round2(r.l1)}</span><br><span class="lam">λ₂ = ${round2(r.l2)}</span><br>`;
+    html += `<span class="vec">x₁ ≈ [${r.evs[0][0]}, ${r.evs[0][1]}]ᵀ</span><br>`;
+    html += `<span class="vec">x₂ ≈ [${r.evs[1][0]}, ${r.evs[1][1]}]ᵀ</span>`;
+  } else if (r.type === 'repeated') {
+    html = `<span class="lam">λ = ${round2(r.l1)} (repeated)</span><br>`;
+    html += `<span class="vec">x ≈ [${r.evs[0][0]}, ${r.evs[0][1]}]ᵀ</span><br>`;
+    html += `<em style="font-size:0.85rem">(May have only one independent eigenvector)</em>`;
+  } else {
+    html = `<span class="lam">λ₁ = ${round2(r.l1.re)} + ${round2(r.l1.im)}i</span><br>`;
+    html += `<span class="lam">λ₂ = ${round2(r.l2.re)} − ${round2(Math.abs(r.l2.im))}i</span><br>`;
+    html += `<em style="font-size:0.85rem">(Complex conjugate pair — no real eigenvectors)</em>`;
+  }
+  document.getElementById('calcResult').innerHTML = html;
+
+  // steps
+  document.getElementById('calcSteps').style.display = 'block';
+  const stepsHTML = `
+    <div class="formula" style="font-size:0.88rem;text-align:left;line-height:1.8">
+      A = | ${a}  ${b} |&nbsp;&nbsp; trace = ${a} + ${d} = ${r.tr}&nbsp;&nbsp; det = ${a}×${d} − ${b}×${c} = ${r.det}<br>
+      | ${c}  ${d} |<br><br>
+      Characteristic eq: λ² − ${r.tr}λ + ${r.det} = 0<br>
+      Discriminant = ${r.tr}² − 4×${r.det} = ${round2(r.disc)}<br>
+      ${r.type === 'real' ? `√discriminant = ${round2(Math.sqrt(r.disc))}<br>λ₁ = (${r.tr} + ${round2(Math.sqrt(r.disc))}) / 2 = ${round2(r.l1)}<br>λ₂ = (${r.tr} − ${round2(Math.sqrt(r.disc))}) / 2 = ${round2(r.l2)}` :
+        r.type === 'repeated' ? `Discriminant = 0 → repeated eigenvalue λ = ${round2(r.l1)}` :
+        `Discriminant < 0 → complex eigenvalues λ = ${round2(r.l1.re)} ± ${round2(Math.abs(r.l1.im))}i`}
+    </div>`;
+  document.getElementById('stepsContent').innerHTML = stepsHTML;
+}
+
+// ─── SHIFT DEMO ───────────────────────────────────────────────────────────────
+function updateShift(v) {
+  v = parseFloat(v);
+  document.getElementById('cVal').textContent = v;
+  const l1 = 4 + v, l2 = 2 + v;
+  document.getElementById('shiftResult').innerHTML =
+    `λ₁ = 4 + ${v} = ${l1} &nbsp;|&nbsp; λ₂ = 2 + ${v} = ${l2}`;
+}
+
+// ─── VISUALIZATION ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('visCanvas');
+const ctx = canvas.getContext('2d');
+let animFrame = null, animT = 0, animRunning = false;
+
+function getMatrix() {
+  return [
+    +document.getElementById('va').value,
+    +document.getElementById('vb').value,
+    +document.getElementById('vc').value,
+    +document.getElementById('vd').value
+  ];
+}
+
+function drawVis(t) {
+  const W = canvas.width, H = canvas.height;
+  const CX = W / 2, CY = H / 2;
+  const SCALE = 55;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0D1B2A';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,150,220,0.12)';
+  ctx.lineWidth = 1;
+  for (let i = -8; i <= 8; i++) {
+    ctx.beginPath(); ctx.moveTo(CX + i * SCALE, 0); ctx.lineTo(CX + i * SCALE, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, CY + i * SCALE); ctx.lineTo(W, CY + i * SCALE); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(150,200,255,0.4)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, CY); ctx.lineTo(W, CY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX, 0); ctx.lineTo(CX, H); ctx.stroke();
+
+  const [a, b, c, d] = getMatrix();
+  const r = calcEigen2x2(a, b, c, d);
+
+  // Precompute eigenvectors
+  const eigVecs = r.type !== 'complex' ? r.evs : null;
+
+  // Draw sample vectors (non-eigenvectors in red)
+  const sampleAngles = [0.5, 1.2, 2.1, 2.8, 4.0, 4.7];
+  for (const ang of sampleAngles) {
+    const ox = Math.cos(ang), oy = Math.sin(ang);
+    const nx = a * ox + b * oy, ny = c * ox + d * oy;
+    const ix = ox + (nx - ox) * t, iy = oy + (ny - oy) * t;
+    drawArrow(CX, CY, CX + ox * SCALE, CY - oy * SCALE, 'rgba(220,80,80,0.35)', 1.5);
+    drawArrow(CX, CY, CX + ix * SCALE, CY - iy * SCALE, 'rgba(255,100,100,0.8)', 2);
+  }
+
+  // Draw eigenvectors (blue — they stay in their direction)
+  if (eigVecs) {
+    for (let i = 0; i < eigVecs.length; i++) {
+      const [ex, ey] = eigVecs[i];
+      const lam = (i === 0 ? r.l1 : r.l2);
+      const nx = a * ex + b * ey, ny = c * ex + d * ey;
+      const norm = Math.sqrt(nx * nx + ny * ny);
+      const scl = t === 0 ? 1 : (1 - t) + t * norm;
+      drawArrow(CX, CY, CX + ex * SCALE, CY - ey * SCALE, `rgba(100,180,255,0.4)`, 1.5);
+      drawArrow(CX, CY, CX + ex * SCALE * scl, CY - ey * SCALE * scl,
+        i === 0 ? 'rgba(80,180,255,1)' : 'rgba(100,220,160,1)', 3);
+      ctx.fillStyle = i === 0 ? '#5bbfff' : '#64dcA0';
+      ctx.font = 'bold 13px Arial';
+      ctx.fillText(`λ=${Math.round(lam * 100) / 100}`, CX + ex * SCALE * scl + 8, CY - ey * SCALE * scl + 4);
+    }
+  }
+
+  // Legend
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(12, H - 58, 200, 48);
+  ctx.fillStyle = 'rgba(255,100,100,0.9)';
+  ctx.fillRect(22, H - 50, 20, 3);
+  ctx.fillStyle = '#fff'; ctx.font = '12px Arial';
+  ctx.fillText('Regular vectors (change direction)', 50, H - 43);
+  ctx.fillStyle = 'rgba(80,180,255,1)';
+  ctx.fillRect(22, H - 28, 20, 3);
+  ctx.fillStyle = '#fff';
+  ctx.fillText('Eigenvectors (same direction)', 50, H - 21);
+
+  // Display eigenvalues
+  let dispText = '';
+  if (r.type === 'real') dispText = `Eigenvalues: λ₁ = ${round2(r.l1)}, λ₂ = ${round2(r.l2)}`;
+  else if (r.type === 'repeated') dispText = `Eigenvalues: λ = ${round2(r.l1)} (repeated)`;
+  else dispText = `Eigenvalues: ${round2(r.l1.re)}±${round2(Math.abs(r.l1.im))}i (complex)`;
+  document.getElementById('eigenDisplay').textContent = dispText;
+}
+
+function drawArrow(x1, y1, x2, y2, color, lw) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 2) return;
+  const ux = dx / len, uy = dy / len;
+  const hs = Math.min(12, len * 0.35);
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - hs * ux + hs * 0.4 * uy, y2 - hs * uy - hs * 0.4 * ux);
+  ctx.lineTo(x2 - hs * ux - hs * 0.4 * uy, y2 - hs * uy + hs * 0.4 * ux);
+  ctx.closePath(); ctx.fill();
+}
+
+function runAnim() {
+  if (animRunning) return;
+  animRunning = true;
+  animT = 0;
+  const btn = document.getElementById('animBtn');
+  btn.classList.add('active'); btn.textContent = '⏳ Animating…';
+  function frame() {
+    animT = Math.min(animT + 0.018, 1);
+    drawVis(animT);
+    if (animT < 1) { animFrame = requestAnimationFrame(frame); }
+    else { animRunning = false; btn.classList.remove('active'); btn.textContent = '▶ Animate Transform'; }
+  }
+  animFrame = requestAnimationFrame(frame);
+}
+
+function resetAnim() {
+  cancelAnimationFrame(animFrame);
+  animRunning = false;
+  animT = 0;
+  document.getElementById('animBtn').classList.remove('active');
+  document.getElementById('animBtn').textContent = '▶ Animate Transform';
+  drawVis(0);
+}
+
+// Redraw when matrix inputs change
+['va','vb','vc','vd'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { resetAnim(); });
+});
+
+drawVis(0);
+
+// ─── QUIZ ─────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "For the matrix A = [[2,0],[0,5]], what are the eigenvalues?",
+    opts: ["λ=2, λ=5", "λ=7, λ=10", "λ=1, λ=1", "λ=0, λ=0"],
+    ans: 0,
+    exp: "Diagonal matrices have eigenvalues equal to their diagonal entries: 2 and 5."
+  },
+  {
+    q: "Which equation must be solved to find eigenvalues?",
+    opts: ["Ax = b", "det(A − λI) = 0", "A + λI = 0", "trace(A) = 0"],
+    ans: 1,
+    exp: "The characteristic equation det(A − λI) = 0 gives the eigenvalues."
+  },
+  {
+    q: "For a 3×3 matrix, how many eigenvalues are there (counting repeats)?",
+    opts: ["1", "2", "3", "It depends"],
+    ans: 2,
+    exp: "An n×n matrix always has exactly n eigenvalues (counting repeated roots)."
+  },
+  {
+    q: "For A = [[3,1],[1,3]], trace = 6 and det = 8. What is the characteristic equation?",
+    opts: ["λ² + 6λ + 8 = 0", "λ² − 6λ + 8 = 0", "λ² − 8λ + 6 = 0", "λ² + 8 = 0"],
+    ans: 1,
+    exp: "The 2×2 shortcut: λ² − (trace)λ + (det) = 0 → λ² − 6λ + 8 = 0."
+  },
+  {
+    q: "If A is singular, which of the following is guaranteed?",
+    opts: ["All eigenvalues are 1", "λ = 0 is an eigenvalue", "All eigenvalues are real", "There are no eigenvalues"],
+    ans: 1,
+    exp: "Singular means det(A) = 0, which means det(A − 0·I) = 0, so λ = 0 is an eigenvalue."
+  },
+  {
+    q: "What happens to eigenvectors when you replace A with A + 5I?",
+    opts: ["They all double in length", "They rotate by 5°", "They stay the same", "They become complex"],
+    ans: 2,
+    exp: "Adding c·I shifts eigenvalues by c, but the eigenvectors are completely unchanged."
+  }
+];
+
+let selected = {};
+
+function buildQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = quizData.map((q, i) => `
+    <div style="margin-bottom:1.5rem">
+      <div class="quiz-q">Q${i+1}. ${q.q}</div>
+      <div class="quiz-options" id="opts${i}">
+        ${q.opts.map((o, j) => `<button class="quiz-opt" onclick="selectOpt(${i},${j})" id="opt${i}_${j}">${o}</button>`).join('')}
+      </div>
+      <div class="quiz-feedback" id="fb${i}"></div>
+    </div>
+  `).join('');
+}
+
+function selectOpt(qi, oi) {
+  document.querySelectorAll(`#opts${qi} .quiz-opt`).forEach(b => b.classList.remove('correct','wrong','selected'));
+  document.getElementById(`opt${qi}_${oi}`).style.borderColor = 'var(--blue-mid)';
+  document.getElementById(`opt${qi}_${oi}`).style.background = 'var(--blue-light)';
+  selected[qi] = oi;
+}
+
+function checkQuiz() {
+  let score = 0;
+  quizData.forEach((q, i) => {
+    const sel = selected[i];
+    if (sel === undefined) {
+      document.getElementById(`fb${i}`).innerHTML = `<span style="color:#888">— Not answered</span>`;
+      return;
+    }
+    const btn = document.getElementById(`opt${i}_${sel}`);
+    if (sel === q.ans) {
+      btn.classList.add('correct');
+      document.getElementById(`fb${i}`).innerHTML = `<span style="color:var(--green-dark)">✓ Correct! ${q.exp}</span>`;
+      score++;
+    } else {
+      btn.classList.add('wrong');
+      document.getElementById(`opt${i}_${q.ans}`).classList.add('correct');
+      document.getElementById(`fb${i}`).innerHTML = `<span style="color:var(--red)">✗ Incorrect. ${q.exp}</span>`;
+    }
+  });
+  document.getElementById('quizScore').innerHTML =
+    `Score: ${score} / ${quizData.length} — ${score === quizData.length ? '🎉 Perfect!' : score >= 4 ? '👍 Good job!' : '📖 Keep studying!'}`;
+}
+
+function resetQuiz() {
+  selected = {};
+  buildQuiz();
+  document.getElementById('quizScore').textContent = '';
+}
+
+buildQuiz();
+
+// ─── SMOOTH SCROLL + NAV ACTIVE ───────────────────────────────────────────────
+document.querySelectorAll('nav a').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// Run initial calc
+calcEigen();
+</script>
+</body>
+</html>
